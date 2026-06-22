@@ -1,30 +1,98 @@
-"""Backend de IA: dispara um prompt e mostra/usa a resposta.
+"""Backend de IA: chama a API Anthropic e streama tokens para o overlay.
 
-No protótipo apenas registra a intenção. A integração real (chamada de API)
-fica como TODO para o Claude Code conectar.
+Modelo padrão: claude-haiku-4-5-20251001 (rápido, bom para resposta ao vivo).
+Sem ANTHROPIC_API_KEY ou sem SDK instalado, cai em modo dry — emite
+tokens fake para a GUI ainda funcionar.
 
 Ações:
-  prompt -> args: { prompt: "explique este slide", show: "overlay|stdout" }
-
-TODO(claude-code):
-  - chamar a API escolhida com args["prompt"]
-  - opcional: capturar o texto do slide atual (via AppleScriptBackend) e injetar
-  - exibir a resposta no overlay (fx/) ou via TTS
+  prompt   -> args: { prompt: "texto" }     dispara stream em thread daemon
+  dismiss  -> esconde o overlay
 """
 from __future__ import annotations
 
+import os
+import threading
+import time
 from typing import Any
 
 from outputs.base import Backend
+
+DEFAULT_MODEL = "claude-haiku-4-5-20251001"
+
+
+def _try_import_anthropic():
+    try:
+        import anthropic  # type: ignore
+        return anthropic
+    except Exception:
+        return None
 
 
 class AiBackend(Backend):
     name = "ai"
 
+    def __init__(self, model: str = DEFAULT_MODEL) -> None:
+        self.signals = None         # GUI injeta AiSignals; None = print
+        self.model = model
+        self._anthropic = _try_import_anthropic()
+        self._client = None
+        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        if self._anthropic and api_key:
+            try:
+                self._client = self._anthropic.Anthropic(api_key=api_key)
+            except Exception as exc:
+                print(f"[ai] cliente Anthropic falhou: {exc}")
+
     def execute(self, do: str, args: dict[str, Any], value: int = 0) -> None:
         if do == "prompt":
-            prompt = args.get("prompt", "")
-            print(f"[ai] (stub) prompt -> {prompt!r}")
-            # TODO(claude-code): resposta = call_api(prompt); exibir/usar
+            prompt = args.get("prompt", "").strip()
+            if not prompt:
+                print("[ai] prompt vazio, ignorado")
+                return
+            threading.Thread(target=self._stream, args=(prompt,), daemon=True).start()
+        elif do == "dismiss":
+            if self.signals:
+                self.signals.dismiss.emit()
+            else:
+                print("[ai/dry] dismiss")
         else:
             print(f"[ai] ação desconhecida: {do}")
+
+    def _stream(self, prompt: str) -> None:
+        if self._client is None:
+            self._stream_dry(prompt)
+            return
+        try:
+            with self._client.messages.stream(
+                model=self.model,
+                max_tokens=512,
+                messages=[{"role": "user", "content": prompt}],
+            ) as stream:
+                for text in stream.text_stream:
+                    self._emit_token(text)
+            self._emit_done()
+        except Exception as exc:
+            msg = f"{type(exc).__name__}: {exc}"
+            if self.signals:
+                self.signals.error.emit(msg)
+            else:
+                print(f"[ai] erro: {msg}")
+
+    def _stream_dry(self, prompt: str) -> None:
+        fake = f"[ai/dry sem API key] resposta simulada para: {prompt}"
+        for chunk in fake.split(" "):
+            self._emit_token(chunk + " ")
+            time.sleep(0.04)
+        self._emit_done()
+
+    def _emit_token(self, text: str) -> None:
+        if self.signals:
+            self.signals.token.emit(text)
+        else:
+            print(text, end="", flush=True)
+
+    def _emit_done(self) -> None:
+        if self.signals:
+            self.signals.done.emit()
+        else:
+            print()   # quebra de linha
