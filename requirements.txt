@@ -1,0 +1,9 @@
+mido>=1.3.0
+python-rtmidi>=1.5.0
+pynput>=1.7.6
+PyYAML>=6.0
+# Para próximas etapas (descomente quando for usar):
+# PySide6>=6.6.0        # overlay de strobo
+# python-osc>=1.8.0     # backend OSC (OBS/VJ)
+# anthropic>=0.40.0     # ação de IA
+# pyobjc-framework-Cocoa>=10.0   # auto-perfil por app em foco (macOS)

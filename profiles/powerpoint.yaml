@@ -1,0 +1,35 @@
+name: PowerPoint
+description: >
+  Perfil de exemplo. Navegação por teclado (universal) + alguns slides diretos
+  via AppleScript + efeitos próprios + uma ação de IA. Ajuste os 'number' às
+  notas reais da sua APC mini (use o log do listener para descobri-las).
+
+bindings:
+  # --- navegação básica (backend universal de teclado) ---
+  - input: { type: note, number: 0 }      # grid (0,0)
+    action: { backend: keyboard, do: key, args: { key: right } }   # próximo slide
+  - input: { type: note, number: 1 }      # grid (0,1)
+    action: { backend: keyboard, do: key, args: { key: left } }    # slide anterior
+  - input: { type: note, number: 8 }      # grid (1,0)
+    action: { backend: keyboard, do: key, args: { key: "b" } }     # tela preta (PPT)
+
+  # --- pulo direto para slides (controle profundo via AppleScript) ---
+  - input: { type: note, number: 16 }
+    action: { backend: applescript, do: ppt_goto, args: { slide: 1 } }
+  - input: { type: note, number: 17 }
+    action: { backend: applescript, do: ppt_goto, args: { slide: 10 } }
+
+  # --- efeitos de tela próprios ---
+  - input: { type: note, number: 24 }
+    action: { backend: fx, do: strobe_toggle }
+  - input: { type: note, number: 25 }
+    action: { backend: fx, do: flash }
+  - input: { type: cc, number: 48 }       # fader 1 -> frequência do strobo
+    action: { backend: fx, do: strobe_rate }
+
+  # --- IA ---
+  - input: { type: note, number: 56 }
+    action:
+      backend: ai
+      do: prompt
+      args: { prompt: "Explique o slide atual em uma frase.", show: overlay }
