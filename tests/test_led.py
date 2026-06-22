@@ -67,6 +67,15 @@ def test_clear_sends_off():
     led.close()
 
 
+def test_flash_timer_is_pruned_after_firing():
+    sent, sink = _recorder()
+    led = LedController(flash_ms=10, sink=sink)
+    led.flash(5)
+    time.sleep(0.05)
+    assert led._timers == []   # timer se remove após disparar (sem vazamento)
+    led.close()
+
+
 def test_dry_mode_does_not_raise():
     # sem sink e sem mido/dispositivo -> modo dry, só imprime
     led = LedController(sink=None)
@@ -114,6 +123,23 @@ def test_ai_dismiss_clears_led():
     assert ("clear", 42) in led.calls
 
 
+def test_ai_clears_led_when_stream_raises():
+    ai = AiBackend()
+
+    class _BoomClient:
+        class messages:
+            @staticmethod
+            def stream(*a, **k):
+                raise RuntimeError("boom")
+
+    ai._client = _BoomClient()   # força o caminho real, que levanta
+    led = _FakeLed()
+    ai.led = led
+    ai._run("Oi", note=7)
+    assert led.calls[0] == ("blink", 7)
+    assert led.calls[-1] == ("clear", 7)   # finally limpa mesmo com erro
+
+
 class _SpyLed:
     def __init__(self):
         self.flashed = []
@@ -158,6 +184,14 @@ def test_mapper_sets_led_from_toggle_result():
     m.handle(MidiEvent("note_on", 24, 127))
     assert led.sets == [(24, True)]
     assert led.flashed == []
+
+
+def test_mapper_sets_led_off_from_falsey_toggle():
+    led = _SpyLed()
+    be = _StubBackend(ret=False)
+    m = _mapper_with(Binding("note", 26, "fx", "blackout_toggle", {}), be, led)
+    m.handle(MidiEvent("note_on", 26, 127))
+    assert led.sets == [(26, False)]
 
 
 def test_mapper_progress_leaves_led_to_backend():

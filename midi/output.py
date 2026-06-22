@@ -69,10 +69,22 @@ class LedController:
 
     def flash(self, note: int) -> None:
         self._send(note, GREEN)
-        t = threading.Timer(self._flash_ms / 1000, self._send, args=(note, OFF))
+        t = threading.Timer(self._flash_ms / 1000, self._flash_off, args=(note,))
         t.daemon = True
-        self._timers.append(t)
+        with self._lock:
+            self._timers.append(t)
         t.start()
+
+    def _flash_off(self, note: int) -> None:
+        """Callback do timer: apaga o LED e remove o próprio timer da lista."""
+        self._send(note, OFF)
+        # Timer é subclasse de Thread; rodando no próprio thread, current_thread() é ele.
+        cur = threading.current_thread()
+        with self._lock:
+            try:
+                self._timers.remove(cur)
+            except ValueError:
+                pass
 
     def set(self, note: int, on: bool) -> None:
         self._send(note, RED if on else OFF)
@@ -84,9 +96,13 @@ class LedController:
         self._send(note, OFF)
 
     def close(self) -> None:
-        for t in self._timers:
+        # Snapshot sob o lock; cancela fora dele (evita segurar o lock no cancel
+        # e a corrida com flash() mexendo na lista).
+        with self._lock:
+            timers = list(self._timers)
+            self._timers.clear()
+        for t in timers:
             t.cancel()
-        self._timers.clear()
         if self._port is not None:
             try:
                 self._port.close()
