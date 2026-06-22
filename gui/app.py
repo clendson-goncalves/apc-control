@@ -15,6 +15,7 @@ from gui.main_window import MainWindow
 from gui.midi_bridge import MidiBridge
 from gui.signals import AiSignals, FxSignals
 from midi.listener import MidiListener
+from midi.output import LedController
 from outputs.ai import AiBackend
 from outputs.applescript import AppleScriptBackend
 from outputs.fx_bridge import FxBackend
@@ -37,10 +38,14 @@ def run_gui(profile_path: Path) -> None:
         "ai": ai_backend,
     }
 
+    # ---- LED output (feedback no hardware) ----
+    led = LedController()
+    ai_backend.led = led
+
     # ---- bus + mapper ----
     bus = EventBus()
     profile = load_profile(profile_path)
-    mapper = Mapper(profile, backends)
+    mapper = Mapper(profile, backends, led=led)
     bus.subscribe(mapper.handle)
     bridge = MidiBridge(bus)
 
@@ -69,3 +74,4 @@ def run_gui(profile_path: Path) -> None:
         sys.exit(app.exec())
     finally:
         listener.stop()
+        led.close()
