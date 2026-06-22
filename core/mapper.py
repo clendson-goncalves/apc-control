@@ -15,18 +15,16 @@ def idle_notes(profile) -> list[int]:
     return [b.number for b in profile.bindings if b.input_type == "note"]
 
 
-def led_behavior(input_type: str, backend: str, do: str) -> str | None:
+def led_behavior(input_type: str, do: str) -> str | None:
     """Infere o comportamento do LED pelo tipo da ação (sem config no perfil).
 
-    cc (faders) não têm LED. Ações '*_toggle' permanecem acesas; o 'prompt'
-    da IA pisca enquanto streama; o resto dá um flash momentâneo.
+    cc (faders) não têm LED. Ações '*_toggle' permanecem acesas; o resto dá um
+    flash momentâneo.
     """
     if input_type == "cc":
         return None
     if do.endswith("_toggle"):
         return "toggle"
-    if backend == "ai" and do == "prompt":
-        return "progress"
     return "flash"
 
 
@@ -69,9 +67,9 @@ class Mapper:
         # Feedback de LED conforme o tipo da ação.
         if self.led is None:
             return
-        behavior = led_behavior(input_type, binding.backend, binding.do)
+        behavior = led_behavior(input_type, binding.do)
         if behavior == "flash":
             self.led.flash(event.number)
         elif behavior == "toggle":
             self.led.set(event.number, on=bool(result))
-        # "progress" e None: nada aqui (a IA cuida do blink/clear).
+        # None (faders): nada aqui.

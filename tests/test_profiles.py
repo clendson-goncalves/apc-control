@@ -12,7 +12,7 @@ Perfil de exemplo.
 |-------|----|----------|--------|-----------|
 | note  | 0  | keyboard | key    | key=right |
 | cc    | 48 | fx       | strobe_rate |      |
-| note  | 56 | ai       | prompt | prompt=Resuma o slide |
+| note  | 16 | applescript | ppt_goto | slide=10 |
 """
 
 
@@ -27,7 +27,7 @@ def test_parse_extracts_bindings():
     assert len(p.bindings) == 3
     assert p.bindings[0] == Binding("note", 0, "keyboard", "key", {"key": "right"})
     assert p.bindings[1] == Binding("cc", 48, "fx", "strobe_rate", {})
-    assert p.bindings[2].args == {"prompt": "Resuma o slide"}
+    assert p.bindings[2].args == {"slide": "10"}
 
 
 def test_args_with_multiple_pairs():

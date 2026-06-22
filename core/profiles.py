@@ -21,7 +21,7 @@ from pathlib import Path
 class Binding:
     input_type: str               # "note" | "cc"
     number: int
-    backend: str                  # "keyboard" | "applescript" | "fx" | "ai" | ...
+    backend: str                  # "keyboard" | "applescript" | "fx" | ...
     do: str                       # nome da ação dentro do backend
     args: dict[str, str] = field(default_factory=dict)
 

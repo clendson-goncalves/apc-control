@@ -1,8 +1,8 @@
 # PowerPoint
 
 Perfil de exemplo. Navegação por teclado (universal) + slides diretos via
-AppleScript + efeitos próprios + uma ação de IA. Ajuste os 'N' às notas
-reais da sua APC mini (use o log do listener para descobri-las).
+AppleScript + efeitos próprios. Ajuste os 'N' às notas reais da sua APC mini
+(use o log do listener para descobri-las).
 
 ## Bindings
 | Input | N  | Backend     | Action          | Args                                        |
@@ -16,5 +16,3 @@ reais da sua APC mini (use o log do listener para descobri-las).
 | note  | 25 | fx          | flash           |                                             |
 | note  | 26 | fx          | blackout_toggle |                                             |
 | cc    | 48 | keyboard    | key             |                                             |
-| note  | 56 | ai          | prompt          | prompt=Explique o slide atual em uma frase. |
-| note  | 57 | ai          | dismiss         |                                             |

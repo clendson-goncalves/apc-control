@@ -1,8 +1,8 @@
 # apc-control
 
 Controlar uma **Akai APC mini** no macOS para: passar slides, disparar efeitos de
-tela (strobo/flash), exibir overlays de IA e comandar qualquer software — com um
-sistema de **perfis** em Markdown que mapeia a APC para qualquer aplicativo.
+tela (strobo/flash) e comandar qualquer software — com um sistema de **perfis**
+em Markdown que mapeia a APC para qualquer aplicativo.
 
 > Protótipo focado em **macOS (Apple Silicon)**. O código está estruturado para
 > ser cross-platform depois (a divergência fica isolada nos backends de saída).
@@ -25,11 +25,9 @@ APC (MIDI in)
 MidiListener ──► EventBus ──► Mapper (perfil ativo) ──► Output Backends
     │                                                    ├── keyboard   (pynput, universal)
     │                                                    ├── applescript (osascript, macOS)
-    │                                                    ├── fx ──► StrobeOverlay  ─┐
-    │                                                    └── ai ──► AiOverlay       │ overlays
-                                                                                      │ independentes
-    │                                                                               │ do software-alvo
-    └── LED feedback ◄──────────────────────────────────────────────────────────────┘
+    │                                                    └── fx ──► StrobeOverlay (sobre qualquer app)
+    │
+    └── LED feedback ◄──────────────────────────────────────────────
 
 GUI (PySide6)
     ├── LivePanel    — log de eventos ao vivo + controles de FX
@@ -43,8 +41,6 @@ Conceitos centrais:
 - **Perfil** (Markdown em `profiles/`): mapeia nota/CC → ação. Trocar de software = trocar de perfil.
 - **Output backends** (`outputs/`): cada ação abstrata é executada por um backend registrado.
 - **FX overlay** (`fx/strobe.py`): strobo/flash/blackout funcionam por cima de qualquer app.
-- **AI overlay** (`gui/ai_overlay.py`): exibe texto gerado pela IA por cima de qualquer app,
-  auto-dismiss em 12 s, Esc fecha imediatamente.
 
 ## Setup (macOS, M1)
 
@@ -94,7 +90,6 @@ Perfil de exemplo para navegação de slides.
 | note  | 24 | fx          | strobe_toggle   |                                             |
 | note  | 25 | fx          | flash           |                                             |
 | cc    | 48 | fx          | strobe_rate     |                                             |
-| note  | 56 | ai          | prompt          | prompt=Explique o slide atual em uma frase. |
 ```
 
 A coluna `Args` usa o formato `chave=valor` separados por vírgula (ex.: `key=right, slide=1`).

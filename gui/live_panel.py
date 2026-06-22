@@ -1,4 +1,4 @@
-"""Painel ao vivo: status MIDI, log de eventos, gatilhos manuais de FX/IA.
+"""Painel ao vivo: status MIDI, log de eventos, gatilhos manuais de FX.
 
 O aviso de fotossensibilidade aparece UMA vez por sessão antes do primeiro
 strobo. Slider de rate é cap MAX_SAFE_HZ (3.0).
@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtWidgets import (
-    QHBoxLayout, QLabel, QLineEdit, QListWidget, QMessageBox, QPushButton,
+    QHBoxLayout, QLabel, QListWidget, QMessageBox, QPushButton,
     QSlider, QVBoxLayout, QWidget,
 )
 
@@ -20,10 +20,9 @@ LOG_LIMIT = 200
 
 
 class LivePanel(QWidget):
-    def __init__(self, bridge: MidiBridge, listener, fx_signals, ai_backend) -> None:
+    def __init__(self, bridge: MidiBridge, listener, fx_signals) -> None:
         super().__init__()
         self.fx_signals = fx_signals
-        self.ai_backend = ai_backend
         self._warned = False
         self._strobe_on = False
 
@@ -66,15 +65,6 @@ class LivePanel(QWidget):
         fx_row.addWidget(QLabel("Rate Hz:"))
         fx_row.addWidget(self.rate)
         layout.addLayout(fx_row)
-
-        # --- gatilhos manuais IA ---
-        ai_row = QHBoxLayout()
-        self.prompt = QLineEdit()
-        self.prompt.setPlaceholderText("Digite um prompt e Enter (overlay aparece sobre tudo)")
-        self.prompt.returnPressed.connect(self._send_prompt)
-        btn_send = QPushButton("Enviar à IA"); btn_send.clicked.connect(self._send_prompt)
-        ai_row.addWidget(QLabel("IA:")); ai_row.addWidget(self.prompt, stretch=1); ai_row.addWidget(btn_send)
-        layout.addLayout(ai_row)
 
     # ---- handlers ----------------------------------------------------------
     @Slot(object)
@@ -120,9 +110,3 @@ class LivePanel(QWidget):
     def _rate_changed(self, v: int) -> None:
         hz = v / 10.0
         self.fx_signals.rate.emit(hz)
-
-    def _send_prompt(self) -> None:
-        text = self.prompt.text().strip()
-        if not text:
-            return
-        self.ai_backend.execute("prompt", {"prompt": text})

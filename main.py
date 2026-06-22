@@ -20,7 +20,6 @@ from core.mapper import Mapper, idle_notes
 from core.profiles import load_profile
 from midi.listener import MidiListener
 from midi.output import LedController
-from outputs.ai import AiBackend
 from outputs.applescript import AppleScriptBackend
 from outputs.fx_bridge import FxBackend
 from outputs.keyboard import KeyboardBackend
@@ -31,7 +30,6 @@ def build_backends() -> dict:
         "keyboard": KeyboardBackend(),
         "applescript": AppleScriptBackend(),
         "fx": FxBackend(),
-        "ai": AiBackend(),
     }
 
 
@@ -45,7 +43,6 @@ def run_headless(profile_path: Path) -> None:
     bus = EventBus()
     backends = build_backends()
     led = LedController()
-    backends["ai"].led = led
     mapper = Mapper(profile, backends, led=led)
     led.set_idle(idle_notes(profile))      # acende os pads mapeados (idle)
     bus.subscribe(mapper.handle)

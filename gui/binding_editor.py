@@ -19,12 +19,11 @@ from core.profiles import Binding, Profile, save_profile
 from gui.apc_grid import APCGrid
 from gui.midi_bridge import MidiBridge
 
-BACKENDS = ["keyboard", "applescript", "fx", "ai"]
+BACKENDS = ["keyboard", "applescript", "fx"]
 ACTIONS = {
     "keyboard": ["key", "combo", "text"],
     "applescript": ["ppt_next", "ppt_prev", "ppt_goto", "keynote_next", "keynote_prev", "run"],
     "fx": ["strobe_toggle", "strobe_rate", "flash", "blackout_toggle"],
-    "ai": ["prompt", "dismiss"],
 }
 
 

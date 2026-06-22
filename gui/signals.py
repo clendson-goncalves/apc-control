@@ -13,10 +13,3 @@ class FxSignals(QObject):
     rate = Signal(float)
     flash = Signal()
     blackout = Signal()
-
-
-class AiSignals(QObject):
-    token = Signal(str)
-    done = Signal()
-    error = Signal(str)
-    dismiss = Signal()

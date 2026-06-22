@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**apc-control** — controls an Akai APC mini on macOS to drive slides, screen FX (strobe/flash), and AI prompts, with a Markdown **profile** system that maps the APC to any target software. Currently a prototype focused on macOS (Apple Silicon); kept structured so cross-platform comes later (divergence isolated in output backends). README is in Portuguese.
+**apc-control** — controls an Akai APC mini on macOS to drive slides and screen FX (strobe/flash), with a Markdown **profile** system that maps the APC to any target software. Currently a prototype focused on macOS (Apple Silicon); kept structured so cross-platform comes later (divergence isolated in output backends). README is in Portuguese.
 
 ## Commands
 
@@ -32,32 +32,29 @@ APC (MIDI in)
 MidiListener ──► EventBus ──► Mapper(active profile) ──► Output Backends
     │                              │                      ├── keyboard    (pynput, universal)
     │                              │                      ├── applescript (osascript, macOS)
-    │                              │                      ├── fx ──► StrobeOverlay
-    │                              │                      └── ai ──► AiOverlay
+    │                              │                      └── fx ──► StrobeOverlay
     │                              ▼
     │                       LedController ──► APC (MIDI out, LED feedback)
     │
     └── GUI (PySide6) ◄── MidiBridge ◄── EventBus
             ├── LivePanel      — live event log + FX controls
             ├── BindingEditor  — learn/edit/save bindings
-            ├── ApcGrid        — visual 8×8 grid representation
-            └── AiOverlay      — always-on-top text overlay, auto-dismiss 12 s
+            └── ApcGrid        — visual 8×8 grid representation
 ```
 
 ### File responsibilities
 
 - **`core/bus.py`** — `MidiEvent` (normalized note_on/note_off/control_change) + minimal synchronous pub/sub `EventBus`. Handler exceptions are swallowed with a log so the loop stays up.
 - **`core/profiles.py`** — `Profile` and `Binding` dataclasses loaded from the Markdown table in `profiles/`. A binding maps `(input_type, number)` → `(backend, do, args)`. Swapping target software = swapping profile, no code change.
-- **`core/mapper.py`** — subscribes to the bus, routes events to the binding's backend. CCs trigger continuously; notes only on press (release is suppressed). Passes the raw MIDI value as `value=` and the note as `note=`. `led_behavior(input_type, backend, do)` infers LED feedback per action type (cc→none, `*_toggle`→toggle, ai `prompt`→progress, else flash) and drives the `LedController`.
+- **`core/mapper.py`** — subscribes to the bus, routes events to the binding's backend. CCs trigger continuously; notes only on press (release is suppressed). Passes the raw MIDI value as `value=` and the note as `note=`. `led_behavior(input_type, do)` infers LED feedback per action type (cc→none, `*_toggle`→toggle, else flash) and drives the `LedController`.
 - **`midi/listener.py`** — opens the first port containing `APC_PORT_HINT` ("APC MINI"). Real and simulated loops both run on a daemon thread.
 - **`midi/output.py`** — `LedController`; opens the APC's **output** port (reuses `APC_PORT_HINT`) and sends `note_on` back to light LEDs by velocity (`OFF/GREEN/RED/YELLOW_BLINK` — varies by firmware). `flash` (momentary, auto-off timer), `set` (toggle steady), `blink` (hardware blink), `clear`. Falls back to `[led/dry]` without hardware/`mido`.
 - **`outputs/base.py`** — every backend implements `execute(do, args, value=0, note=None) -> bool | None` (toggles return their new state for LED feedback). Add new backends by subclassing `Backend` and registering in `main.build_backends()`.
 - **`outputs/fx_bridge.py`** — `FxBackend`; bridges mapper actions to `StrobeOverlay`. Defines `MAX_SAFE_HZ = 3.0` (single source of truth for the photosensitivity cap).
 - **`fx/strobe.py`** — PySide6 frameless/translucent/always-on-top overlay for strobe/flash/blackout over any app. Imports `MAX_SAFE_HZ` from `outputs/fx_bridge.py`.
-- **`gui/signals.py`** — Qt signal definitions (`FxSignals`, `AiSignals`) shared across the GUI.
+- **`gui/signals.py`** — Qt signal definitions (`FxSignals`) shared across the GUI.
 - **`gui/midi_bridge.py`** — bridges the thread-safe `EventBus` into Qt signals so GUI widgets receive `MidiEvent` objects on the main thread.
 - **`gui/_macos.py`** — macOS-specific helpers (window level, permission checks).
-- **`gui/ai_overlay.py`** — always-on-top overlay that streams AI text over any app; auto-dismiss in 12 s, Esc closes immediately.
 - **`gui/apc_grid.py`** — visual representation of the APC mini 8×8 grid; highlights active pads.
 - **`gui/binding_editor.py`** — editor tab; supports MIDI Learn (press a pad to fill the form) and saves bindings back to the Markdown profile.
 - **`gui/live_panel.py`** — live tab; shows event log, Flash button, Strobe enable checkbox + rate slider.
@@ -81,7 +78,6 @@ Create `profiles/<name>.md` with a header and a `## Bindings` Markdown table wit
 - Code is Python 3.10+ (uses `X | None`, `list[...]`). Comments and docstrings are in Portuguese — keep new code in the same language to stay consistent. (English is acceptable in this CLAUDE.md and in technical identifiers.)
 - TODOs intended for future implementation use the tag `# TODO(claude-code):`.
 - **Strobe safety rule**: `MAX_SAFE_HZ = 3.0` lives in `outputs/fx_bridge.py` (single source of truth). `fx/strobe.py` imports it from there. Do NOT raise this cap without also adding a user-facing warning in the UI.
-- **AI backend**: set `ANTHROPIC_API_KEY` to enable real calls. Model: `claude-haiku-4-5-20251001`, streaming. Without the key, the backend falls back to a dry-run that fake-streams a placeholder response — UX stays intact.
 
 ## APC mini MIDI reference
 

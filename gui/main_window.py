@@ -18,7 +18,7 @@ PROFILES_DIR = Path(__file__).resolve().parent.parent / "profiles"
 
 class MainWindow(QMainWindow):
     def __init__(self, bridge: MidiBridge, mapper: Mapper, listener,
-                 fx_signals, ai_backend, profile_path: Path) -> None:
+                 fx_signals, profile_path: Path) -> None:
         super().__init__()
         self.setWindowTitle("apc-control")
         self.resize(850, 760)
@@ -42,7 +42,7 @@ class MainWindow(QMainWindow):
 
         # tabs
         tabs = QTabWidget()
-        self.live = LivePanel(bridge, listener, fx_signals, ai_backend)
+        self.live = LivePanel(bridge, listener, fx_signals)
         self.editor = BindingEditor(mapper.profile, profile_path, bridge)
         self.editor.profile_changed.connect(self._reload_current)
         tabs.addTab(self.live, "Ao vivo")

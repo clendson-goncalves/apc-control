@@ -5,7 +5,6 @@ from core.bus import MidiEvent
 from core.mapper import Mapper, idle_notes, led_behavior
 from core.profiles import Binding, Profile
 from midi.output import LedController, OFF, GREEN, RED, YELLOW_BLINK
-from outputs.ai import AiBackend
 from outputs.fx_bridge import FxBackend
 
 
@@ -19,21 +18,17 @@ def test_idle_notes_returns_only_note_bindings():
 
 
 def test_led_behavior_cc_has_no_led():
-    assert led_behavior("cc", "fx", "strobe_rate") is None
+    assert led_behavior("cc", "strobe_rate") is None
 
 
 def test_led_behavior_toggle():
-    assert led_behavior("note", "fx", "strobe_toggle") == "toggle"
-    assert led_behavior("note", "fx", "blackout_toggle") == "toggle"
-
-
-def test_led_behavior_ai_prompt_is_progress():
-    assert led_behavior("note", "ai", "prompt") == "progress"
+    assert led_behavior("note", "strobe_toggle") == "toggle"
+    assert led_behavior("note", "blackout_toggle") == "toggle"
 
 
 def test_led_behavior_default_is_flash():
-    assert led_behavior("note", "keyboard", "key") == "flash"
-    assert led_behavior("note", "ai", "dismiss") == "flash"
+    assert led_behavior("note", "key") == "flash"
+    assert led_behavior("note", "ppt_goto") == "flash"
 
 
 def _recorder():
@@ -162,52 +157,6 @@ def test_fx_toggle_returns_new_state():
     assert fx.execute("flash", {}) is None
 
 
-class _FakeLed:
-    def __init__(self):
-        self.calls: list[tuple[str, int]] = []
-
-    def blink(self, note):
-        self.calls.append(("blink", note))
-
-    def clear(self, note):
-        self.calls.append(("clear", note))
-
-
-def test_ai_prompt_blinks_then_clears_on_done():
-    ai = AiBackend()          # sem API key -> _stream_dry, mas síncrono no teste
-    led = _FakeLed()
-    ai.led = led
-    # roda o stream de forma síncrona (sem thread) para o teste ser determinístico
-    ai._run("Oi", note=42)
-    assert led.calls[0] == ("blink", 42)
-    assert led.calls[-1] == ("clear", 42)
-
-
-def test_ai_dismiss_clears_led():
-    ai = AiBackend()
-    led = _FakeLed()
-    ai.led = led
-    ai.execute("dismiss", {}, note=42)
-    assert ("clear", 42) in led.calls
-
-
-def test_ai_clears_led_when_stream_raises():
-    ai = AiBackend()
-
-    class _BoomClient:
-        class messages:
-            @staticmethod
-            def stream(*a, **k):
-                raise RuntimeError("boom")
-
-    ai._client = _BoomClient()   # força o caminho real, que levanta
-    led = _FakeLed()
-    ai.led = led
-    ai._run("Oi", note=7)
-    assert led.calls[0] == ("blink", 7)
-    assert led.calls[-1] == ("clear", 7)   # finally limpa mesmo com erro
-
-
 class _SpyLed:
     def __init__(self):
         self.flashed = []
@@ -260,15 +209,6 @@ def test_mapper_sets_led_off_from_falsey_toggle():
     m = _mapper_with(Binding("note", 26, "fx", "blackout_toggle", {}), be, led)
     m.handle(MidiEvent("note_on", 26, 127))
     assert led.sets == [(26, False)]
-
-
-def test_mapper_progress_leaves_led_to_backend():
-    led = _SpyLed()
-    be = _StubBackend()
-    m = _mapper_with(Binding("note", 56, "ai", "prompt", {}), be, led)
-    m.handle(MidiEvent("note_on", 56, 127))
-    assert led.flashed == [] and led.sets == []   # IA cuida do blink/clear
-    assert be.last_note == 56
 
 
 def test_mapper_without_led_does_not_crash():
