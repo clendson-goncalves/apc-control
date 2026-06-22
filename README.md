@@ -97,7 +97,7 @@ Perfil de exemplo para navegação de slides.
 | note  | 56 | ai          | prompt          | prompt=Explique o slide atual em uma frase. |
 ```
 
-A coluna `Args` usa o formato `chave=valor` separados por espaço (ex.: `key=right slide=1`).
+A coluna `Args` usa o formato `chave=valor` separados por vírgula (ex.: `key=right, slide=1`).
 Campos em branco significam sem argumentos. O parser está em `core/profiles.py`.
 
 ## Mapa da APC mini (referência)

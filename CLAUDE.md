@@ -70,7 +70,7 @@ MidiListener ──► EventBus ──► Mapper(active profile) ──► Outpu
 
 ### Adding a profile
 
-Create `profiles/<name>.md` with a header and a `## Bindings` Markdown table with columns: `Input`, `N`, `Backend`, `Action`, `Args`. See `profiles/powerpoint.md` for the canonical example. The `Args` column uses `key=value` pairs separated by spaces (e.g., `key=right slide=1`); empty cell means no args.
+Create `profiles/<name>.md` with a header and a `## Bindings` Markdown table with columns: `Input`, `N`, `Backend`, `Action`, `Args`. See `profiles/powerpoint.md` for the canonical example. The `Args` column uses `key=value` pairs separated by commas (e.g., `key=right, slide=1`); empty cell means no args.
 
 **`Binding.args` is always `dict[str, str]`** — consumers are responsible for casting to the correct type (e.g., `int(args["slide"])`).
 
