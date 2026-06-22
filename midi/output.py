@@ -27,7 +27,7 @@ class LedController:
     ) -> None:
         self._lock = threading.Lock()
         self._timers: list[threading.Timer] = []
-        self._idle: dict[int, int] = {}        # note -> cor de descanso
+        self._idle: dict[int, int] = {}        # note -> cor de descanso; só escrito no startup (set_idle)
         self._flash_ms = flash_ms
         self._port = None
         self._dry = False
