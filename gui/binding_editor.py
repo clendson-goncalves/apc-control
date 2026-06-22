@@ -56,7 +56,7 @@ class BindingEditor(QWidget):
         right = QWidget(); right_l = QVBoxLayout(right)
         self.grid = APCGrid()
         self.grid.clicked.connect(self._on_grid_click)
-        right_l.addWidget(self.grid)
+        right_l.addWidget(self.grid, alignment=Qt.AlignHCenter)
 
         form = QHBoxLayout()
         self.input_type = QComboBox(); self.input_type.addItems(["note", "cc"])

@@ -21,7 +21,7 @@ class MainWindow(QMainWindow):
                  fx_signals, ai_backend, profile_path: Path) -> None:
         super().__init__()
         self.setWindowTitle("apc-control")
-        self.resize(1100, 720)
+        self.resize(1280, 760)
         self.mapper = mapper
         self.path = profile_path
 

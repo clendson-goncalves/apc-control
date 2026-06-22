@@ -41,7 +41,7 @@ class LivePanel(QWidget):
 
         # --- grid visual (espelho dos eventos) ---
         self.grid = APCGrid()
-        layout.addWidget(self.grid)
+        layout.addWidget(self.grid, alignment=Qt.AlignHCenter)
 
         # --- log ---
         self.log = QListWidget()
