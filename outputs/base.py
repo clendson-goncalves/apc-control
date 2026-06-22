@@ -11,5 +11,7 @@ from typing import Any
 class Backend:
     name: str = "base"
 
-    def execute(self, do: str, args: dict[str, Any], value: int = 0) -> None:
+    def execute(
+        self, do: str, args: dict[str, Any], value: int = 0, note: int | None = None
+    ) -> bool | None:
         raise NotImplementedError

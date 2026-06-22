@@ -19,6 +19,7 @@ from core.bus import EventBus
 from core.mapper import Mapper
 from core.profiles import load_profile
 from midi.listener import MidiListener
+from midi.output import LedController
 from outputs.ai import AiBackend
 from outputs.applescript import AppleScriptBackend
 from outputs.fx_bridge import FxBackend
@@ -43,7 +44,9 @@ def run_headless(profile_path: Path) -> None:
 
     bus = EventBus()
     backends = build_backends()
-    mapper = Mapper(profile, backends)
+    led = LedController()
+    backends["ai"].led = led
+    mapper = Mapper(profile, backends, led=led)
     bus.subscribe(mapper.handle)
 
     listener = MidiListener(bus)
@@ -57,6 +60,7 @@ def run_headless(profile_path: Path) -> None:
     except KeyboardInterrupt:
         print("\nencerrando…")
         listener.stop()
+        led.close()
 
 
 def main() -> None:
