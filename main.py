@@ -16,7 +16,7 @@ import time
 from pathlib import Path
 
 from core.bus import EventBus
-from core.mapper import Mapper
+from core.mapper import Mapper, idle_notes
 from core.profiles import load_profile
 from midi.listener import MidiListener
 from midi.output import LedController
@@ -47,6 +47,7 @@ def run_headless(profile_path: Path) -> None:
     led = LedController()
     backends["ai"].led = led
     mapper = Mapper(profile, backends, led=led)
+    led.set_idle(idle_notes(profile))      # acende os pads mapeados (idle)
     bus.subscribe(mapper.handle)
 
     listener = MidiListener(bus)

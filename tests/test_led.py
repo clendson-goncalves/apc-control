@@ -2,11 +2,20 @@
 import time
 
 from core.bus import MidiEvent
-from core.mapper import Mapper, led_behavior
+from core.mapper import Mapper, idle_notes, led_behavior
 from core.profiles import Binding, Profile
 from midi.output import LedController, OFF, GREEN, RED, YELLOW_BLINK
 from outputs.ai import AiBackend
 from outputs.fx_bridge import FxBackend
+
+
+def test_idle_notes_returns_only_note_bindings():
+    profile = Profile("T", "", [
+        Binding("note", 0, "keyboard", "key", {}),
+        Binding("cc", 48, "fx", "strobe_rate", {}),
+        Binding("note", 8, "fx", "flash", {}),
+    ])
+    assert idle_notes(profile) == [0, 8]    # ignora cc, mantém ordem
 
 
 def test_led_behavior_cc_has_no_led():

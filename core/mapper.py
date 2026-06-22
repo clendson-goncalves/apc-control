@@ -7,6 +7,14 @@ from core.bus import MidiEvent
 from core.profiles import Profile
 
 
+def idle_notes(profile) -> list[int]:
+    """Números dos pads (notas) com binding — candidatos a acender no idle.
+
+    Faders (input 'cc') não têm LED, então ficam de fora.
+    """
+    return [b.number for b in profile.bindings if b.input_type == "note"]
+
+
 def led_behavior(input_type: str, backend: str, do: str) -> str | None:
     """Infere o comportamento do LED pelo tipo da ação (sem config no perfil).
 
