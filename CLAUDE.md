@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**apc-control** — controls an Akai APC mini on macOS to drive slides and screen FX (strobe/flash), with a Markdown **profile** system that maps the APC to any target software. Currently a prototype focused on macOS (Apple Silicon); kept structured so cross-platform comes later (divergence isolated in output backends). README is in Portuguese.
+**apc-control** — controls an Akai APC mini on macOS to drive slides and screen FX (strobe/flash), with a Markdown **profile** system that maps the APC to any target software. Currently a prototype focused on macOS (Apple Silicon); kept structured so cross-platform comes later (divergence isolated in output backends). README is in English.
 
 ## Commands
 
@@ -46,9 +46,9 @@ MidiListener ──► EventBus ──► Mapper(active profile) ──► Outpu
 
 - **`core/bus.py`** — `MidiEvent` (normalized note_on/note_off/control_change) + minimal synchronous pub/sub `EventBus`. Handler exceptions are swallowed with a log so the loop stays up.
 - **`core/profiles.py`** — `Profile` and `Binding` dataclasses loaded from the Markdown table in `profiles/`. A binding maps `(input_type, number)` → `(backend, do, args)`. Swapping target software = swapping profile, no code change.
-- **`core/mapper.py`** — subscribes to the bus, routes events to the binding's backend. CCs trigger continuously; notes only on press (release is suppressed). Passes the raw MIDI value as `value=` and the note as `note=`. `led_behavior(input_type, do)` infers LED feedback per action type (cc→none, `*_toggle`→toggle, else flash) and drives the `LedController`.
+- **`core/mapper.py`** — subscribes to the bus, routes events to the binding's backend. CCs trigger continuously; notes only on press (release is suppressed). Passes the raw MIDI value as `value=` and the note as `note=`. `led_behavior(input_type, do)` infers LED feedback per action type (cc→none, `*_toggle`→toggle, else flash) and drives the `LedController`. Module-level `idle_notes(profile)` returns the note bindings to light at startup (faders excluded).
 - **`midi/listener.py`** — opens the first port containing `APC_PORT_HINT` ("APC MINI"). Real and simulated loops both run on a daemon thread.
-- **`midi/output.py`** — `LedController`; opens the APC's **output** port (reuses `APC_PORT_HINT`) and sends `note_on` back to light LEDs by velocity (`OFF/GREEN/RED/YELLOW_BLINK` — varies by firmware). `flash` (momentary, auto-off timer), `set` (toggle steady), `blink` (hardware blink), `clear`. Falls back to `[led/dry]` without hardware/`mido`.
+- **`midi/output.py`** — `LedController`; opens the APC's **output** port (reuses `APC_PORT_HINT`) and sends `note_on` back to light LEDs by velocity (`OFF/GREEN/RED/YELLOW_BLINK` — varies by firmware). `set_idle(notes)` lights the mapped pads green at startup and records each pad's resting color; actions return to that idle color instead of going dark. `flash` (momentary red, auto-off timer → restore idle), `set` (toggle: red steady / restore idle), `clear` (restore idle), `blink` (hardware blink). `close` turns all idle pads off. Falls back to `[led/dry]` without hardware/`mido`.
 - **`outputs/base.py`** — every backend implements `execute(do, args, value=0, note=None) -> bool | None` (toggles return their new state for LED feedback). Add new backends by subclassing `Backend` and registering in `main.build_backends()`.
 - **`outputs/fx_bridge.py`** — `FxBackend`; bridges mapper actions to `StrobeOverlay`. Defines `MAX_SAFE_HZ = 3.0` (single source of truth for the photosensitivity cap).
 - **`fx/strobe.py`** — PySide6 frameless/translucent/always-on-top overlay for strobe/flash/blackout over any app. Imports `MAX_SAFE_HZ` from `outputs/fx_bridge.py`.
