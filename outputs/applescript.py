@@ -53,4 +53,12 @@ class AppleScriptBackend(Backend):
         if template is None:
             print(f"[applescript] ação desconhecida: {do}")
             return
-        self._osascript(template.format(**args))
+        # coerção: 'slide' chega como string vindo do perfil .md
+        fmt_args = dict(args)
+        if "slide" in fmt_args:
+            try:
+                fmt_args["slide"] = int(fmt_args["slide"])
+            except (TypeError, ValueError):
+                print(f"[applescript] slide inválido: {fmt_args['slide']!r}")
+                return
+        self._osascript(template.format(**fmt_args))
