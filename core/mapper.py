@@ -7,6 +7,21 @@ from core.bus import MidiEvent
 from core.profiles import Profile
 
 
+def led_behavior(input_type: str, backend: str, do: str) -> str | None:
+    """Infere o comportamento do LED pelo tipo da ação (sem config no perfil).
+
+    cc (faders) não têm LED. Ações '*_toggle' permanecem acesas; o 'prompt'
+    da IA pisca enquanto streama; o resto dá um flash momentâneo.
+    """
+    if input_type == "cc":
+        return None
+    if do.endswith("_toggle"):
+        return "toggle"
+    if backend == "ai" and do == "prompt":
+        return "progress"
+    return "flash"
+
+
 class Mapper:
     def __init__(self, profile: Profile, backends: dict[str, Any]) -> None:
         self.profile = profile
