@@ -23,9 +23,10 @@ def led_behavior(input_type: str, backend: str, do: str) -> str | None:
 
 
 class Mapper:
-    def __init__(self, profile: Profile, backends: dict[str, Any]) -> None:
+    def __init__(self, profile: Profile, backends: dict[str, Any], led=None) -> None:
         self.profile = profile
         self.backends = backends
+        self.led = led          # LedController | None
 
     def set_profile(self, profile: Profile) -> None:
         self.profile = profile
@@ -52,5 +53,17 @@ class Mapper:
             print(f"[Mapper] backend '{binding.backend}' indisponível")
             return
 
-        # Passa o valor cru junto (faders precisam dele; botões geralmente ignoram).
-        backend.execute(binding.do, binding.args, value=event.value)
+        # Passa o valor cru e a nota (para o feedback de LED).
+        result = backend.execute(
+            binding.do, binding.args, value=event.value, note=event.number
+        )
+
+        # Feedback de LED conforme o tipo da ação.
+        if self.led is None:
+            return
+        behavior = led_behavior(input_type, binding.backend, binding.do)
+        if behavior == "flash":
+            self.led.flash(event.number)
+        elif behavior == "toggle":
+            self.led.set(event.number, on=bool(result))
+        # "progress" e None: nada aqui (a IA cuida do blink/clear).
