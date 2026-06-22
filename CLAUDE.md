@@ -30,10 +30,12 @@ APC (MIDI in)
     │
     ▼
 MidiListener ──► EventBus ──► Mapper(active profile) ──► Output Backends
-    │                                                     ├── keyboard    (pynput, universal)
-    │                                                     ├── applescript (osascript, macOS)
-    │                                                     ├── fx ──► StrobeOverlay
-    │                                                     └── ai ──► AiOverlay
+    │                              │                      ├── keyboard    (pynput, universal)
+    │                              │                      ├── applescript (osascript, macOS)
+    │                              │                      ├── fx ──► StrobeOverlay
+    │                              │                      └── ai ──► AiOverlay
+    │                              ▼
+    │                       LedController ──► APC (MIDI out, LED feedback)
     │
     └── GUI (PySide6) ◄── MidiBridge ◄── EventBus
             ├── LivePanel      — live event log + FX controls
@@ -46,9 +48,10 @@ MidiListener ──► EventBus ──► Mapper(active profile) ──► Outpu
 
 - **`core/bus.py`** — `MidiEvent` (normalized note_on/note_off/control_change) + minimal synchronous pub/sub `EventBus`. Handler exceptions are swallowed with a log so the loop stays up.
 - **`core/profiles.py`** — `Profile` and `Binding` dataclasses loaded from the Markdown table in `profiles/`. A binding maps `(input_type, number)` → `(backend, do, args)`. Swapping target software = swapping profile, no code change.
-- **`core/mapper.py`** — subscribes to the bus, routes events to the binding's backend. CCs trigger continuously; notes only on press (release is suppressed). Passes the raw MIDI value as `value=` so fader-driven actions can use it.
+- **`core/mapper.py`** — subscribes to the bus, routes events to the binding's backend. CCs trigger continuously; notes only on press (release is suppressed). Passes the raw MIDI value as `value=` and the note as `note=`. `led_behavior(input_type, backend, do)` infers LED feedback per action type (cc→none, `*_toggle`→toggle, ai `prompt`→progress, else flash) and drives the `LedController`.
 - **`midi/listener.py`** — opens the first port containing `APC_PORT_HINT` ("APC MINI"). Real and simulated loops both run on a daemon thread.
-- **`outputs/base.py`** — every backend implements `execute(do, args, value)`. Add new backends by subclassing `Backend` and registering in `main.build_backends()`.
+- **`midi/output.py`** — `LedController`; opens the APC's **output** port (reuses `APC_PORT_HINT`) and sends `note_on` back to light LEDs by velocity (`OFF/GREEN/RED/YELLOW_BLINK` — varies by firmware). `flash` (momentary, auto-off timer), `set` (toggle steady), `blink` (hardware blink), `clear`. Falls back to `[led/dry]` without hardware/`mido`.
+- **`outputs/base.py`** — every backend implements `execute(do, args, value=0, note=None) -> bool | None` (toggles return their new state for LED feedback). Add new backends by subclassing `Backend` and registering in `main.build_backends()`.
 - **`outputs/fx_bridge.py`** — `FxBackend`; bridges mapper actions to `StrobeOverlay`. Defines `MAX_SAFE_HZ = 3.0` (single source of truth for the photosensitivity cap).
 - **`fx/strobe.py`** — PySide6 frameless/translucent/always-on-top overlay for strobe/flash/blackout over any app. Imports `MAX_SAFE_HZ` from `outputs/fx_bridge.py`.
 - **`gui/signals.py`** — Qt signal definitions (`FxSignals`, `AiSignals`) shared across the GUI.
