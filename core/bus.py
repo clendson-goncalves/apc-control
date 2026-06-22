@@ -1,4 +1,4 @@
-"""Event bus e tipos de evento.
+"""Event bus e tipos de evento
 
 Tudo que a APC gera é normalizado em um MidiEvent e publicado aqui.
 Os assinantes (mapper, FX, logging) reagem sem acoplamento com o MIDI.

@@ -1,4 +1,4 @@
-"""apc-control — ponto de entrada.
+"""apc-control — ponto de entrada
 
 Liga MidiListener -> EventBus -> Mapper(perfil) -> backends.
 Padrão abre a GUI. Use --headless para o loop antigo (CLI sem PySide6).

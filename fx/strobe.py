@@ -1,4 +1,4 @@
-"""Overlay de strobo/flash/blackout (PySide6).
+"""Overlay de strobo/flash/blackout (PySide6)
 
 Janela frameless, translúcida, always-on-top, fullscreen, sem foco.
 QTimer alterna pintura branca/transparente a N Hz (cap MAX_SAFE_HZ).

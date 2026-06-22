@@ -1,4 +1,4 @@
-"""Backend FX: efeitos de tela próprios (strobo/flash/blackout).
+"""Backend FX: efeitos de tela próprios (strobo/flash/blackout)
 
 Independente do software-alvo — é uma janela overlay sua, funciona por cima
 de qualquer coisa. Aqui fica apenas a PONTE (recebe ações do mapper e repassa

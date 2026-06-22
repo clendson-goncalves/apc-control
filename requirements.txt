@@ -4,5 +4,3 @@ pynput>=1.7.6
 PySide6>=6.6.0
 pyobjc-framework-Cocoa>=10.0
 pytest>=8.0.0
-# Futuro (descomente quando for usar):
-# python-osc>=1.8.0     # backend OSC (OBS/VJ)

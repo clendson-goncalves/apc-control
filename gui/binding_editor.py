@@ -1,5 +1,4 @@
-"""Aba editor de bindings.
-
+"""Aba editor de bindings
 Tabela à esquerda, APC visual + formulário à direita. Botão Learn captura
 o próximo evento MIDI do bridge.
 """

@@ -1,4 +1,4 @@
-"""Testes do parser/serializer de perfis Markdown."""
+"""Testes do parser/serializer de perfis Markdown"""
 from core.profiles import (
     Binding, Profile, parse_markdown, render_markdown, load_profile, save_profile,
 )

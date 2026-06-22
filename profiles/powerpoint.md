@@ -1,6 +1,6 @@
 # PowerPoint
 
-Perfil de exemplo. Navegação por teclado (universal) + slides diretos via
+Perfil de exemplo, navegação por teclado (universal) + slides diretos via
 AppleScript + efeitos próprios. Ajuste os 'N' às notas reais da sua APC mini
 (use o log do listener para descobri-las).
 
