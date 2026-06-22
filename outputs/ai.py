@@ -33,6 +33,7 @@ class AiBackend(Backend):
 
     def __init__(self, model: str = DEFAULT_MODEL) -> None:
         self.signals = None         # GUI injeta AiSignals; None = print
+        self.led = None             # LedController injetado; None = sem LED
         self.model = model
         self._anthropic = _try_import_anthropic()
         self._client = None
@@ -50,20 +51,35 @@ class AiBackend(Backend):
             prompt = args.get("prompt", "").strip()
             if not prompt:
                 print("[ai] prompt vazio, ignorado")
-                return
-            threading.Thread(target=self._stream, args=(prompt,), daemon=True).start()
+                return None
+            threading.Thread(
+                target=self._run, args=(prompt,), kwargs={"note": note}, daemon=True
+            ).start()
         elif do == "dismiss":
+            if note is not None and self.led:
+                self.led.clear(note)
             if self.signals:
                 self.signals.dismiss.emit()
             else:
                 print("[ai/dry] dismiss")
         else:
             print(f"[ai] ação desconhecida: {do}")
+        return None
+
+    def _run(self, prompt: str, note: int | None = None) -> None:
+        """Acende o LED piscando, streama, e limpa o LED ao terminar."""
+        if note is not None and self.led:
+            self.led.blink(note)
+        try:
+            if self._client is None:
+                self._stream_dry(prompt)
+            else:
+                self._stream(prompt)
+        finally:
+            if note is not None and self.led:
+                self.led.clear(note)
 
     def _stream(self, prompt: str) -> None:
-        if self._client is None:
-            self._stream_dry(prompt)
-            return
         try:
             with self._client.messages.stream(
                 model=self.model,

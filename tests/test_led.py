@@ -3,6 +3,7 @@ import time
 
 from core.mapper import led_behavior
 from midi.output import LedController, OFF, GREEN, RED, YELLOW_BLINK
+from outputs.ai import AiBackend
 from outputs.fx_bridge import FxBackend
 
 
@@ -80,3 +81,32 @@ def test_fx_toggle_returns_new_state():
     assert fx.execute("strobe_toggle", {}) is False
     assert fx.execute("blackout_toggle", {}) is True
     assert fx.execute("flash", {}) is None
+
+
+class _FakeLed:
+    def __init__(self):
+        self.calls: list[tuple[str, int]] = []
+
+    def blink(self, note):
+        self.calls.append(("blink", note))
+
+    def clear(self, note):
+        self.calls.append(("clear", note))
+
+
+def test_ai_prompt_blinks_then_clears_on_done():
+    ai = AiBackend()          # sem API key -> _stream_dry, mas síncrono no teste
+    led = _FakeLed()
+    ai.led = led
+    # roda o stream de forma síncrona (sem thread) para o teste ser determinístico
+    ai._run("Oi", note=42)
+    assert led.calls[0] == ("blink", 42)
+    assert led.calls[-1] == ("clear", 42)
+
+
+def test_ai_dismiss_clears_led():
+    ai = AiBackend()
+    led = _FakeLed()
+    ai.led = led
+    ai.execute("dismiss", {}, note=42)
+    assert ("clear", 42) in led.calls
