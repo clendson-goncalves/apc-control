@@ -3,6 +3,7 @@ import time
 
 from core.mapper import led_behavior
 from midi.output import LedController, OFF, GREEN, RED, YELLOW_BLINK
+from outputs.fx_bridge import FxBackend
 
 
 def test_led_behavior_cc_has_no_led():
@@ -71,3 +72,11 @@ def test_dry_mode_does_not_raise():
     led.blink(0)
     led.clear(0)
     led.close()
+
+
+def test_fx_toggle_returns_new_state():
+    fx = FxBackend()  # signals=None -> modo dry
+    assert fx.execute("strobe_toggle", {}) is True
+    assert fx.execute("strobe_toggle", {}) is False
+    assert fx.execute("blackout_toggle", {}) is True
+    assert fx.execute("flash", {}) is None

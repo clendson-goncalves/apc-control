@@ -38,6 +38,7 @@ class FxBackend(Backend):
                 self.signals.strobe.emit(self._strobe_on)
             else:
                 print(f"[fx/dry] strobo {'ON' if self._strobe_on else 'OFF'}")
+            return self._strobe_on
         elif do == "strobe_rate":
             hz = min(round((value / 127) * MAX_SAFE_HZ, 2), MAX_SAFE_HZ)
             if self.signals:
@@ -55,5 +56,7 @@ class FxBackend(Backend):
                 self.signals.blackout.emit()
             else:
                 print(f"[fx/dry] blackout {'ON' if self._blackout_on else 'OFF'}")
+            return self._blackout_on
         else:
             print(f"[fx] ação desconhecida: {do}")
+        return None
