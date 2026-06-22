@@ -27,6 +27,7 @@ class LedController:
     ) -> None:
         self._lock = threading.Lock()
         self._timers: list[threading.Timer] = []
+        self._idle: dict[int, int] = {}        # note -> cor de descanso
         self._flash_ms = flash_ms
         self._port = None
         self._dry = False
@@ -67,8 +68,18 @@ class LedController:
             elif self._dry:
                 print(f"[led/dry] note={note} vel={velocity}")
 
+    def set_idle(self, notes: list[int], color: int = GREEN) -> None:
+        """Acende os pads mapeados (estado idle) e registra a cor de descanso."""
+        for note in notes:
+            self._idle[note] = color
+            self._send(note, color)
+
+    def _restore(self, note: int) -> None:
+        """Volta o LED para a cor de descanso (idle) ou OFF se não houver."""
+        self._send(note, self._idle.get(note, OFF))
+
     def flash(self, note: int) -> None:
-        self._send(note, GREEN)
+        self._send(note, RED)
         t = threading.Timer(self._flash_ms / 1000, self._flash_off, args=(note,))
         t.daemon = True
         with self._lock:
@@ -76,8 +87,8 @@ class LedController:
         t.start()
 
     def _flash_off(self, note: int) -> None:
-        """Callback do timer: apaga o LED e remove o próprio timer da lista."""
-        self._send(note, OFF)
+        """Callback do timer: volta o LED ao idle e remove o próprio timer da lista."""
+        self._restore(note)
         # Timer é subclasse de Thread; rodando no próprio thread, current_thread() é ele.
         cur = threading.current_thread()
         with self._lock:
@@ -87,13 +98,16 @@ class LedController:
                 pass
 
     def set(self, note: int, on: bool) -> None:
-        self._send(note, RED if on else OFF)
+        if on:
+            self._send(note, RED)
+        else:
+            self._restore(note)
 
     def blink(self, note: int) -> None:
         self._send(note, YELLOW_BLINK)
 
     def clear(self, note: int) -> None:
-        self._send(note, OFF)
+        self._restore(note)
 
     def close(self) -> None:
         # Snapshot sob o lock; cancela fora dele (evita segurar o lock no cancel
@@ -101,8 +115,11 @@ class LedController:
         with self._lock:
             timers = list(self._timers)
             self._timers.clear()
+            idle_notes = list(self._idle)
         for t in timers:
             t.cancel()
+        for note in idle_notes:
+            self._send(note, OFF)      # não deixa a controladora acesa após sair
         if self._port is not None:
             try:
                 self._port.close()

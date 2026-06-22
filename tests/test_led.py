@@ -32,13 +32,13 @@ def _recorder():
     return sent, (lambda note, vel: sent.append((note, vel)))
 
 
-def test_flash_sends_green_then_off():
+def test_flash_sends_red_then_restores_off():
     sent, sink = _recorder()
     led = LedController(flash_ms=10, sink=sink)
     led.flash(5)
-    assert sent[0] == (5, GREEN)
+    assert sent[0] == (5, RED)          # pisca vermelho
     time.sleep(0.05)
-    assert sent[-1] == (5, OFF)
+    assert sent[-1] == (5, OFF)         # sem idle registrado -> volta OFF
     led.close()
 
 
@@ -84,6 +84,65 @@ def test_dry_mode_does_not_raise():
     led.blink(0)
     led.clear(0)
     led.close()
+
+
+def test_set_idle_lights_and_registers():
+    sent, sink = _recorder()
+    led = LedController(sink=sink)
+    led.set_idle([0, 8, 16])
+    assert sent == [(0, GREEN), (8, GREEN), (16, GREEN)]
+    assert led._idle == {0: GREEN, 8: GREEN, 16: GREEN}
+    led.close()
+
+
+def test_flash_idle_pad_returns_to_green():
+    sent, sink = _recorder()
+    led = LedController(flash_ms=10, sink=sink)
+    led.set_idle([5])
+    led.flash(5)
+    assert (5, RED) in sent             # piscou vermelho
+    time.sleep(0.05)
+    assert sent[-1] == (5, GREEN)       # voltou ao idle verde
+    led.close()
+
+
+def test_flash_non_idle_pad_returns_to_off():
+    sent, sink = _recorder()
+    led = LedController(flash_ms=10, sink=sink)
+    led.flash(9)
+    time.sleep(0.05)
+    assert sent[-1] == (9, OFF)
+    led.close()
+
+
+def test_toggle_off_idle_pad_returns_to_green():
+    sent, sink = _recorder()
+    led = LedController(sink=sink)
+    led.set_idle([7])
+    sent.clear()
+    led.set(7, on=True)
+    led.set(7, on=False)
+    assert sent == [(7, RED), (7, GREEN)]   # ON vermelho, OFF volta idle
+    led.close()
+
+
+def test_clear_idle_pad_returns_to_green():
+    sent, sink = _recorder()
+    led = LedController(sink=sink)
+    led.set_idle([9])
+    sent.clear()
+    led.clear(9)
+    assert sent == [(9, GREEN)]
+    led.close()
+
+
+def test_close_turns_off_idle_pads():
+    sent, sink = _recorder()
+    led = LedController(sink=sink)
+    led.set_idle([0, 1])
+    sent.clear()
+    led.close()
+    assert (0, OFF) in sent and (1, OFF) in sent
 
 
 def test_fx_toggle_returns_new_state():
