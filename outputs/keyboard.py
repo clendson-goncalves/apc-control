@@ -37,7 +37,9 @@ class KeyboardBackend(Backend):
             return getattr(self._Key, name)
         return name  # caractere literal
 
-    def execute(self, do: str, args: dict[str, Any], value: int = 0) -> None:
+    def execute(
+        self, do: str, args: dict[str, Any], value: int = 0, note: int | None = None
+    ) -> bool | None:
         if self._kbd is None:
             print(f"[keyboard/dry] {do} {args}")
             return

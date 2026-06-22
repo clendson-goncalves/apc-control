@@ -45,7 +45,9 @@ class AppleScriptBackend(Backend):
         except subprocess.CalledProcessError as exc:
             print(f"[applescript] erro: {exc.stderr.strip()}")
 
-    def execute(self, do: str, args: dict[str, Any], value: int = 0) -> None:
+    def execute(
+        self, do: str, args: dict[str, Any], value: int = 0, note: int | None = None
+    ) -> bool | None:
         if do == "run":
             self._osascript(args.get("script", ""))
             return

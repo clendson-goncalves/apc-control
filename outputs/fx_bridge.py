@@ -29,7 +29,9 @@ class FxBackend(Backend):
         self._strobe_on = False
         self._blackout_on = False
 
-    def execute(self, do: str, args: dict[str, Any], value: int = 0) -> None:
+    def execute(
+        self, do: str, args: dict[str, Any], value: int = 0, note: int | None = None
+    ) -> bool | None:
         if do == "strobe_toggle":
             self._strobe_on = not self._strobe_on
             if self.signals:

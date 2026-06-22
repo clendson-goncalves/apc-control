@@ -43,7 +43,9 @@ class AiBackend(Backend):
             except Exception as exc:
                 print(f"[ai] cliente Anthropic falhou: {exc}")
 
-    def execute(self, do: str, args: dict[str, Any], value: int = 0) -> None:
+    def execute(
+        self, do: str, args: dict[str, Any], value: int = 0, note: int | None = None
+    ) -> bool | None:
         if do == "prompt":
             prompt = args.get("prompt", "").strip()
             if not prompt:
