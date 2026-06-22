@@ -33,8 +33,7 @@ MidiListener ──► EventBus ──► Mapper(active profile) ──► Outpu
     │                                                     ├── keyboard    (pynput, universal)
     │                                                     ├── applescript (osascript, macOS)
     │                                                     ├── fx ──► StrobeOverlay
-    │                                                     ├── ai ──► AiOverlay
-    │                                                     └── shell
+    │                                                     └── ai ──► AiOverlay
     │
     └── GUI (PySide6) ◄── MidiBridge ◄── EventBus
             ├── LivePanel      — live event log + FX controls

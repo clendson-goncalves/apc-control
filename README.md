@@ -26,8 +26,8 @@ MidiListener ──► EventBus ──► Mapper (perfil ativo) ──► Output
     │                                                    ├── keyboard   (pynput, universal)
     │                                                    ├── applescript (osascript, macOS)
     │                                                    ├── fx ──► StrobeOverlay  ─┐
-    │                                                    ├── ai ──► AiOverlay       │ overlays
-    │                                                    └── shell                  │ independentes
+    │                                                    └── ai ──► AiOverlay       │ overlays
+                                                                                      │ independentes
     │                                                                               │ do software-alvo
     └── LED feedback ◄──────────────────────────────────────────────────────────────┘
 

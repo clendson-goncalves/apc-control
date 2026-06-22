@@ -25,7 +25,6 @@ class AiOverlay(QWidget):
             | Qt.BypassWindowManagerHint
         )
         self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setAttribute(Qt.WA_ShowWithoutActivating)
 
         scr = QApplication.primaryScreen().geometry()
         self.setGeometry(scr)

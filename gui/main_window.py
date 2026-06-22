@@ -13,7 +13,7 @@ from gui.binding_editor import BindingEditor
 from gui.live_panel import LivePanel
 from gui.midi_bridge import MidiBridge
 
-PROFILES_DIR = Path("profiles")
+PROFILES_DIR = Path(__file__).resolve().parent.parent / "profiles"
 
 
 class MainWindow(QMainWindow):
