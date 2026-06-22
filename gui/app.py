@@ -7,7 +7,7 @@ from pathlib import Path
 from PySide6.QtWidgets import QApplication
 
 from core.bus import EventBus
-from core.mapper import Mapper
+from core.mapper import Mapper, idle_notes
 from core.profiles import load_profile
 from fx.strobe import StrobeOverlay
 from gui.ai_overlay import AiOverlay
@@ -46,6 +46,7 @@ def run_gui(profile_path: Path) -> None:
     bus = EventBus()
     profile = load_profile(profile_path)
     mapper = Mapper(profile, backends, led=led)
+    led.set_idle(idle_notes(profile))      # acende os pads mapeados (idle)
     bus.subscribe(mapper.handle)
     bridge = MidiBridge(bus)
 
