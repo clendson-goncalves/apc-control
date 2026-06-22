@@ -1,11 +1,15 @@
 # apc-control
 
 Control an **Akai APC mini** on macOS to advance slides, trigger screen effects
-(strobe/flash), and drive any software — using a Markdown **profile** system that
+(strobe/flash), and drive any software, using a Markdown **profile** system that
 maps the APC to any application.
 
 > Prototype focused on **macOS (Apple Silicon)**. The code is structured to go
 > cross-platform later (the divergence stays isolated in the output backends).
+
+<img width="870" height="862" alt="apc-control-live" src="https://github.com/user-attachments/assets/d44b2db1-3bed-4b38-9b30-ee9843695b3c" />
+
+<img width="874" height="865" alt="apc-control-editor" src="https://github.com/user-attachments/assets/10b11c0b-fb48-4b7b-88da-ad4ffa92d0f1" />
 
 ---
 
