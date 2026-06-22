@@ -1,14 +1,16 @@
-"""apcdeck — ponto de entrada.
+"""apc-control — ponto de entrada.
 
-Liga tudo: listener MIDI -> EventBus -> Mapper(perfil) -> backends.
-Roda no M1. Sem APC/libs, entra em modo simulado para validar o fluxo.
+Liga MidiListener -> EventBus -> Mapper(perfil) -> backends.
+Padrão abre a GUI. Use --headless para o loop antigo (CLI sem PySide6).
 
 Uso:
-    python main.py                       # usa profiles/powerpoint.yaml
-    python main.py profiles/keynote.yaml
+    python main.py                                  # GUI, profiles/powerpoint.md
+    python main.py profiles/keynote.md              # GUI com este perfil
+    python main.py --headless profiles/x.md         # modo CLI (sem GUI)
 """
 from __future__ import annotations
 
+import argparse
 import sys
 import time
 from pathlib import Path
@@ -27,39 +29,50 @@ def build_backends() -> dict:
     return {
         "keyboard": KeyboardBackend(),
         "applescript": AppleScriptBackend(),
-        "fx": FxBackend(overlay=None),   # TODO(claude-code): passar StrobeOverlay
+        "fx": FxBackend(),
         "ai": AiBackend(),
-        # "osc": OscBackend(),           # TODO(claude-code)
     }
 
 
-def main() -> None:
-    profile_path = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("profiles/powerpoint.yaml")
+def run_headless(profile_path: Path) -> None:
     profile = load_profile(profile_path)
-
     print("=" * 56)
-    print(f" apcdeck — perfil: {profile.name}")
+    print(f" apc-control — perfil: {profile.name}")
     print(f" bindings: {len(profile.bindings)}")
     print("=" * 56)
 
     bus = EventBus()
     backends = build_backends()
     mapper = Mapper(profile, backends)
-
     bus.subscribe(mapper.handle)
 
     listener = MidiListener(bus)
-    ports = listener.list_ports()
-    print(f"[MIDI] portas disponíveis: {ports or '(nenhuma / lib ausente)'}")
+    print(f"[MIDI] portas disponíveis: {listener.list_ports() or '(nenhuma)'}")
     listener.start()
 
-    print("\nPronto. Aperte os botões da APC (ou veja a simulação). Ctrl+C para sair.\n")
+    print("\nPronto. Aperte os botões da APC. Ctrl+C para sair.\n")
     try:
         while True:
             time.sleep(0.2)
     except KeyboardInterrupt:
         print("\nencerrando…")
         listener.stop()
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(prog="apc-control")
+    parser.add_argument(
+        "profile", nargs="?", default="profiles/powerpoint.md", type=Path,
+        help="caminho do perfil .md (default: profiles/powerpoint.md)",
+    )
+    parser.add_argument("--headless", action="store_true", help="modo CLI sem GUI")
+    args = parser.parse_args()
+
+    if args.headless:
+        run_headless(args.profile)
+    else:
+        from gui.app import run_gui   # import lazy: headless não precisa de Qt
+        run_gui(args.profile)
 
 
 if __name__ == "__main__":
